@@ -282,7 +282,9 @@ export class MineruLayoutViewer extends HTMLElement {
         const s = RENDER_SCALE * (pw / page.w)
         overlays.forEach(ov => {
           const el2 = ov as HTMLElement
-          if (Math.abs(parseFloat(el2.style.left) - sec.bbox![0] * s) < 4) {
+          const dx = Math.abs(parseFloat(el2.style.left) - sec.bbox![0] * s)
+          const dy = Math.abs(parseFloat(el2.style.top) - sec.bbox![1] * s)
+          if (dx < 2 && dy < 2) {
             el2.classList.add('active'); el2.scrollIntoView({ behavior: 'smooth', block: 'center' })
           }
         })
