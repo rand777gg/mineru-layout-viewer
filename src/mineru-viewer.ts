@@ -280,7 +280,7 @@ export class MineruLayoutViewer extends HTMLElement {
           const el2 = ov as HTMLElement
           const dx = Math.abs(parseFloat(el2.style.left) - sec.bbox![0] * s)
           const dy = Math.abs(parseFloat(el2.style.top) - sec.bbox![1] * s)
-          if (dx < 2 && dy < 2) {
+          if (dx < 4 && dy < 4) {
             el2.classList.add('active'); el2.scrollIntoView({ behavior: 'smooth', block: 'center' })
           }
         })
