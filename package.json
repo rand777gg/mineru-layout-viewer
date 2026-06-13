@@ -1,6 +1,6 @@
 {
   "name": "mineru-layout-viewer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Visualize MinerU layout.json output — side-by-side PDF + Markdown with bidirectional navigation",
   "type": "module",
   "main": "./dist/index.mjs",

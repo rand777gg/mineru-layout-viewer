@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mineru-layout-viewer 测试</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://unpkg.com/mineru-layout-viewer/dist/mineru-layout-viewer.iife.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { height: 100vh; font-family: system-ui, sans-serif; }
+.drop-zone {
+  height: 100%; display: flex; align-items: center; justify-content: center; margin: 20px;
+  border: 2px dashed #d0d0d0; border-radius: 12px; cursor: pointer; transition: all .2s;
+}
+.drop-zone:hover, .drop-zone.drag-over { border-color: #3b82f6; background: rgba(59,130,246,.04); }
+.drop-zone .hint { text-align: center; color: #888; }
+.drop-zone .hint h3 { font-size: 18px; color: #333; margin-bottom: 8px; }
+.drop-zone .hint p { font-size: 13px; margin: 2px 0; }
+.drop-zone .hint a { color: #3b82f6; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div id="dropZone" class="drop-zone">
+  <div class="hint">
+    <h3>🧪 mineru-layout-viewer 测试</h3>
+    <p>拖放 MinerU 导出 .zip 到此处</p>
+    <p style="font-size:11px;margin-top:12px">
+      <a href="https://www.npmjs.com/package/mineru-layout-viewer" target="_blank">npm</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/rand777gg/mineru-layout-viewer" target="_blank">GitHub</a>
+    </p>
+  </div>
+</div>
+
+<mineru-layout-viewer id="viewer" class="hidden" style="height:100%">
+  <div slot="loading" style="display:flex;align-items:center;justify-content:center;height:100%;color:#888">加载中…</div>
+</mineru-layout-viewer>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+
+const dropZone = document.getElementById('dropZone')
+const viewer = document.getElementById('viewer')
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over') })
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'))
+dropZone.addEventListener('click', () => {
+  const input = document.createElement('input')
+  input.type = 'file'; input.accept = '.zip,.pdf,.json'; input.multiple = true
+  input.onchange = () => handleFiles([...input.files])
+  input.click()
+})
+
+dropZone.addEventListener('drop', async e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over')
+  await handleFiles([...e.dataTransfer.files])
+})
+
+async function handleFiles(files) {
+  const zip = files.find(f => f.name.endsWith('.zip'))
+  if (zip) {
+    dropZone.classList.add('hidden'); viewer.classList.remove('hidden')
+    await viewer.loadZip(zip)
+    return
+  }
+  let pdfFile, jsonFile
+  for (const f of files) {
+    if (f.name.endsWith('.pdf')) pdfFile = f
+    else if (f.name.endsWith('.json')) jsonFile = f
+  }
+  if (jsonFile) {
+    dropZone.classList.add('hidden'); viewer.classList.remove('hidden')
+    await viewer.loadLayoutFromJson(await jsonFile.text())
+    if (pdfFile) viewer.setAttribute('pdf', URL.createObjectURL(pdfFile))
+  }
+}
+</script>
+</body>
+</html>
