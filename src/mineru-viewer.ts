@@ -21,11 +21,7 @@ const STYLES = `
 .split { flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: 0; overflow: hidden; }
 .pane { overflow: auto; padding: 10px; }
 .pane-left { border-right: 1px solid #e5e5e5; background: #fff; }
-.pane-right { background: #f6f8fa; }
-@media (prefers-color-scheme: dark) {
-  .pane-left { border-color: #333; background: #1a1a1a; }
-  .pane-right { background: #0d1117; }
-}
+.pane-right { background: #fff; }
 .pdf-page { position: relative; margin: 0 auto 12px; border: 1px solid #e5e5e5; border-radius: 4px; overflow: hidden; }
 .pdf-page img { display: block; width: 100%; }
 .pdf-page .page-num { position: absolute; bottom: 2px; right: 4px; font-size: 9px; color: #999; background: rgba(255,255,255,.85); padding: 1px 4px; border-radius: 3px; }
