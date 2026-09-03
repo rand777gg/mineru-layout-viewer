@@ -25,6 +25,7 @@ Drop a MinerU export `.zip` (or PDF + `layout.json`) onto the page:
 
 - **Dual-pane view** — PDF pages on the left, Markdown text on the right
 - **Bidirectional navigation** — click a Markdown line → scrolls to the corresponding PDF block and highlights it; click a PDF overlay → scrolls to the matching Markdown line
+- **Reading-order matching** — paragraph ↔ block alignment is monotonic (moves only forward across pages), so repeated lines like `答案：A` or table headers land on the correct page
 - **Multi-format support** — automatically detects `layout.json`, `middle.json`, and `content_list.json`
 - **Nested block handling** — resolves list items, table cells, and other nested blocks to their leaf coordinates
 - **Framework-agnostic** — built as a Web Component, works with React, Vue, or plain HTML
@@ -114,7 +115,12 @@ interface PdfBlock {
 
 #### `matchMarkdownToPdf(markdown: string, blocks: PdfBlock[]): MdSection[]`
 
-Matches markdown text (split by lines) to PDF blocks using LCS similarity.
+Matches markdown to PDF blocks in **reading order** and returns one `MdSection` per paragraph.
+
+The matcher is a monotonic, greedy alignment:
+- markdown is split on blank lines into paragraphs (so hard-wrapped `full.md` lines don't fragment);
+- paragraphs are walked top→bottom while a rolling block window advances only **forward** across pages/blocks — this keeps repeated lines (e.g. `答案：A`, table headers) on the correct page instead of snapping back to an earlier match;
+- each paragraph is scored with `similarity` against candidate blocks and pinned to the best one above a low threshold; unmatched paragraphs stay `bbox: null` rather than guessing a page.
 
 ```ts
 interface MdSection {
@@ -123,6 +129,18 @@ interface MdSection {
   bbox: [number, number, number, number] | null
 }
 ```
+
+#### `similarity(a: string, b: string): number`
+
+Combined text similarity in `[0,1]`: character-bigram Dice (primary, works for unsegmented CJK) blended with a length-penalized longest-common-substring ratio (secondary for verbatim ASCII lines).
+
+#### `lcsSimilarity(a: string, b: string): number`
+
+Legacy helper kept for compatibility — longest-common-substring ratio in `[0,1]`.
+
+#### `normalize(s: string): string`
+
+Normalizes text for comparison: strips markdown syntax and list markers, collapses whitespace, unifies CJK full/half width, lowercases ASCII.
 
 #### `<mineru-layout-viewer>` Attributes
 
@@ -173,6 +191,7 @@ MIT
 
 - **双栏对照** — 左侧 PDF 页面，右侧 Markdown 文本
 - **双向定位** — 点击 Markdown 行 → 滚动到对应 PDF 块并高亮；点击 PDF 覆盖块 → 滚动到匹配的 Markdown 行
+- **阅读顺序匹配** — 段落↔块对齐是单调的（只向前跨页推进），重复文本如 `答案：A`、表头会正确落在对应页
 - **多格式支持** — 自动识别 `layout.json`、`middle.json`、`content_list.json`
 - **嵌套块解析** — 将列表项、表格单元格等嵌套块解析到叶子节点坐标
 - **框架无关** — 基于 Web Component，支持 React、Vue 或原生 HTML
@@ -262,7 +281,12 @@ interface PdfBlock {
 
 #### `matchMarkdownToPdf(markdown: string, blocks: PdfBlock[]): MdSection[]`
 
-使用 LCS 相似度将 Markdown 文本（按行分割）匹配到 PDF block。
+按**阅读顺序**将 Markdown 匹配到 PDF block，每个段落返回一个 `MdSection`。
+
+该匹配器是一个单调的贪心对齐：
+- 按空行把 Markdown 拆成段落（避免 `full.md` 硬换行的碎片化）；
+- 段落自上而下处理，滚动块窗口只**向前**跨越页/块 —— 这样重复文本（如 `答案：A`、表头）会正确落在对应页，而不会回吸到前面的匹配；
+- 每个段落用 `similarity` 对候选块打分，取超过低阈值的最优块；无匹配时保留 `bbox: null`，不做页码猜测。
 
 ```ts
 interface MdSection {
@@ -271,6 +295,18 @@ interface MdSection {
   bbox: [number, number, number, number] | null
 }
 ```
+
+#### `similarity(a: string, b: string): number`
+
+综合文本相似度 `[0,1]`：字符二元组 Dice（主信号，适用于无空格的中文）叠加按长度惩罚的最长公共子串比例（辅助，用于逐字复制的 ASCII 行）。
+
+#### `lcsSimilarity(a: string, b: string): number`
+
+为兼容保留的工具函数 —— 最长公共子串比例 `[0,1]`。
+
+#### `normalize(s: string): string`
+
+比较前对文本做归一化：去掉 Markdown 语法与列表符号、合并空白、统一 CJK 全/半角、ASCII 小写化。
 
 #### `<mineru-layout-viewer>` 属性
 

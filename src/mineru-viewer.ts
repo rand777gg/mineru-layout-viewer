@@ -1,7 +1,7 @@
 import { parseBlocks } from './parse-blocks.js'
 import { matchMarkdownToPdf } from './match-markdown.js'
 import type { PdfBlock, MdSection } from './parse-blocks.js'
-import { normalize, lcsSimilarity } from './match-markdown.js'
+import { normalize, similarity } from './match-markdown.js'
 
 // We load pdf.js worker from CDN — consumer can override via window.PDFJS_WORKER_SRC
 declare const pdfjsLib: typeof import('pdfjs-dist')
@@ -297,7 +297,7 @@ export class MineruLayoutViewer extends HTMLElement {
     let bestIdx = -1, bestSim = 0
     for (let i = 0; i < this.sections.length; i++) {
       if (!this.sections[i].bbox) continue
-      const sim = lcsSimilarity(blockNorm, normalize(this.sections[i].text))
+      const sim = similarity(blockNorm, normalize(this.sections[i].text))
       if (sim > bestSim && sim > 0.05) { bestSim = sim; bestIdx = i }
     }
     if (bestIdx >= 0) {
